@@ -56,7 +56,7 @@ router.post('/sign-up', (req, res, next) => {
       transport
         .sendMail({
           from: process.env.NODEMAILER_EMAIL,
-          to: process.env.NODEMAILER_EMAIL, // CHANGE THIS // email,
+          to: email, //process.env.NODEMAILER_EMAIL, // CHANGE THIS // email,
           subject: 'Sign-up Confirmation',
           html: `
             <html>
@@ -83,10 +83,14 @@ router.post('/sign-up', (req, res, next) => {
 });
 
 router.get('/authentication/confirm-email', (req, res, next) => {
-  const { mailToken } = req.query.token;
-  User.findOneAndUpdate(mailToken, { status: 'active' }).then(user => {
-    res.render('confirmation', { user });
-  });
+  const mailToken = req.query.token;
+  User.findOneAndUpdate({ confirmationToken: mailToken }, { status: 'active' }, { new: true })
+    .then(user => {
+      res.render('confirmation', { user });
+    })
+    .catch(error => {
+      next(error);
+    });
 });
 
 router.get('/sign-in', (req, res, next) => {
@@ -125,6 +129,10 @@ router.post('/sign-out', (req, res, next) => {
 
 router.get('/private', routeGuard, (req, res, next) => {
   res.render('private');
+});
+
+router.get('/profile', routeGuard, (req, res, next) => {
+  res.render('profile');
 });
 
 module.exports = router;
